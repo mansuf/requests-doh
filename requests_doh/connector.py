@@ -48,7 +48,7 @@ def create_connection(
     answers = resolve_dns(host)
 
     for answer in answers:
-        sa = (answer['data'], 443)
+        sa = (answer['data'], sa[1])
         sock = None
         try:
             sock = socket.socket(af, socktype, proto)
