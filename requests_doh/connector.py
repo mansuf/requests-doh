@@ -27,7 +27,7 @@ __all__ = ('set_dns_cache_expire_time', 'purge_dns_cache')
 _cache = DNSCacheManager()
 
 def set_dns_cache_expire_time(time):
-    """Set DNS cache expired time
+    """Set DNS cache expired time in seconds
     
     Parameters
     -----------
