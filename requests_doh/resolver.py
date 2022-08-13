@@ -59,6 +59,9 @@ def resolve_dns(url):
         session = requests.Session()
         set_resolver_session(session)
 
+    answers = set()
+
+    # Query A type
     params = {
         "name": url,
         "type": 'A'
@@ -71,7 +74,29 @@ def resolve_dns(url):
     data = r.json()
 
     if data['Status'] != 0:
-        raise DNSQueryFailed(f"Failed to query DNS from host '{url}'")
+        raise DNSQueryFailed(f"Failed to query DNS A from host '{url}'")
 
-    answers = data['Answer']
+    answers.update(i['data'] for i in data['Answer'])
+
+    # Query AAAA type
+    params = {
+        "name": url,
+        "type": 'AAAA'
+    }
+    r = session.get(
+        _provider,
+        params=params,
+        headers={"Accept": "application/dns-json"}
+    )
+    data = r.json()
+
+    if data['Status'] != 0:
+        raise DNSQueryFailed(f"Failed to query DNS AAAA from host '{url}'")
+
+    try:
+        answers.update(i['data'] for i in data['Answer'])
+    except KeyError:
+        # There is no AAAA type answers
+        pass
+
     return answers, _provider

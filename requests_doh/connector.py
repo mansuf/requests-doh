@@ -21,6 +21,7 @@ except ImportError:
 from .resolver import resolve_dns
 from .cachemanager import DNSCacheManager
 from .exceptions import DNSQueryFailed
+from .utils import fix_resolved_dns
 
 __all__ = ('set_dns_cache_expire_time', 'purge_dns_cache')
 
@@ -89,13 +90,17 @@ def create_connection(
 
         answers, provider_doh = resolve_dns(host)
 
+        # Some answers contain raw domain (example.com) not an ip address
+        # socket.connect() didn't want that
+        fix_resolved_dns(answers, port, family, socket.SOCK_STREAM)
+
         _cache.set_cache(host, af, socktype, proto, canonname, sa, answers, provider_doh)
     else:
         af, socktype, proto, canonname, sa, answers, provider_doh = cached
 
     for answer in answers:
         try:
-            ip = ipaddress.ip_address(answer['data'])
+            ip = ipaddress.ip_address(answer)
         except ValueError:
             # Most likely this is domain returned from DoH provider
             continue
