@@ -11,3 +11,4 @@ __repository__ = "mansuf/requests-doh"
 
 from .adapter import *
 from .resolver import *
+from .connector import *

@@ -1,14 +1,53 @@
 from __future__ import absolute_import
+import ipaddress
 
 import socket
 from urllib3.connection import HTTPSConnection, HTTPConnection
 from urllib3.util.connection import allowed_gai_family, _set_socket_options
 from urllib3.exceptions import ConnectTimeoutError, NewConnectionError, LocationParseError
-from urllib3.packages import six
 from socket import error as SocketError
 from socket import timeout as SocketTimeout
 
+try:
+    from urllib3.packages.six import raise_from
+except ImportError:
+    # Broken package mostly
+    def raise_from(value, from_value):
+        try:
+            raise value from from_value
+        finally:
+            value = None
+
 from .resolver import resolve_dns
+from .cachemanager import DNSCacheManager
+from .exceptions import DNSQueryFailed
+
+__all__ = ('set_dns_cache_expire_time', 'purge_dns_cache')
+
+_cache = DNSCacheManager()
+
+def set_dns_cache_expire_time(time):
+    """Set DNS cache expired time
+    
+    Parameters
+    -----------
+    time: :class:`float`
+        An expire time
+    """
+    _cache.set_expire_time(time)
+
+def purge_dns_cache(host=None):
+    """Purge DNS cache
+
+    Parameters
+    -----------
+    host: :class:`str`
+        Cached DNS host want to be purged, if ``host`` is None, all DNS caches will be purged.
+    """
+    if host:
+        _cache.purge(host)
+    else:
+        _cache.purge_all()
 
 # This code is copied from urllib3/util/connection.py version 1.26.8 (from requests v2.28.1)
 def create_connection(
@@ -34,21 +73,34 @@ def create_connection(
     try:
         host.encode("idna")
     except UnicodeError:
-        return six.raise_from(
+        return raise_from(
             LocationParseError(u"'%s', label empty or too long" % host), None
         )
 
-    orig_answers = socket.getaddrinfo(host, port, family, socket.SOCK_STREAM)
+    cached = _cache.get_cache(host)
+    if not cached:
+        # Uncached DNS
+        orig_answers = socket.getaddrinfo(host, port, family, socket.SOCK_STREAM)
 
-    try:
-        af, socktype, proto, canonname, sa = orig_answers[0]
-    except IndexError:
-        raise socket.error("getaddrinfo returns an empty list")
+        try:
+            af, socktype, proto, canonname, sa = orig_answers[0]
+        except IndexError:
+            raise socket.error("getaddrinfo returns an empty list")
 
-    answers = resolve_dns(host)
+        answers, provider_doh = resolve_dns(host)
+
+        _cache.set_cache(host, af, socktype, proto, canonname, sa, answers, provider_doh)
+    else:
+        af, socktype, proto, canonname, sa, answers, provider_doh = cached
 
     for answer in answers:
-        sa = (answer['data'], sa[1])
+        try:
+            ip = ipaddress.ip_address(answer['data'])
+        except ValueError:
+            # Most likely this is domain returned from DoH provider
+            continue
+
+        sa = (str(ip), sa[1])
         sock = None
         try:
             sock = socket.socket(af, socktype, proto)
@@ -71,6 +123,11 @@ def create_connection(
 
     if err is not None:
         raise err
+
+    # The answers is returned but the data they returned is invalid
+    # socket object needs to connect to a valid ipv4 or ipv6 address
+    # not a raw domain
+    raise DNSQueryFailed(f"DoH provider '{provider_doh}' send an invalid response = {answers}")
 
 class ModifiedHTTPConnection(HTTPConnection):
     # This code is copied from urllib3/connection.py version 1.26.8 (from requests v2.28.1)

@@ -1,5 +1,4 @@
 import requests
-from urllib.parse import urlparse
 
 from .exceptions import DNSQueryFailed
 
@@ -60,8 +59,6 @@ def resolve_dns(url):
         session = requests.Session()
         set_resolver_session(session)
 
-    u = urlparse(url)
-
     params = {
         "name": url,
         "type": 'A'
@@ -77,4 +74,4 @@ def resolve_dns(url):
         raise DNSQueryFailed(f"Failed to query DNS from host '{url}'")
 
     answers = data['Answer']
-    yield from answers
+    return answers, _provider
