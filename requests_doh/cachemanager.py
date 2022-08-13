@@ -6,10 +6,10 @@ class DNSCacheManager:
         self._data = {}
     
     def set_expire_time(self, time):
-        if not isinstance(time, float):
+        if isinstance(time, float) or isinstance(time, int):        
+            self._expire = timedelta(seconds=time)
+        else:
             raise ValueError(f'{time.__class__.__name__} is not float type')
-        
-        self._expire = timedelta(seconds=time)
     
     def set_cache(self, host, af, socktype, proto, canonname, sa, answers, provider):
         self._data[host] = {
