@@ -53,3 +53,26 @@ session.mount('http://', adapter)
 r = session.get('https://google.com')
 print(r.text)
 ```
+
+Set an expire time (in seconds) for DoH caching
+
+```python
+import requests
+from requests_doh import purge_dns_cache, DNSOverHTTPSAdapter
+
+# Default value of `cache_expire_time` is 300
+adapter = DNSOverHTTPSAdapter(provider='google', cache_expire_time=1500) 
+session = requests.Session()
+# For HTTPS
+session.mount('https://', adapter)
+# For HTTP
+session.mount('http://', adapter)
+
+r = session.get('https://google.com')
+print(r.text)
+
+# You can purge single DNS cache
+purge_dns_cache('google.com')
+# or all of them
+purge_dns_cache()
+```
