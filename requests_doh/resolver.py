@@ -11,6 +11,8 @@ _available_providers = {
     "cloudflare": "https://cloudflare-dns.com/dns-query",
     "cloudflare-security": "https://security.cloudflare-dns.com/dns-query",
     "cloudflare-family": "https://family.cloudflare-dns.com/dns-query",
+    "opendns": "https://doh.opendns.com/dns-query",
+    "opendns-family": "https://doh.familyshield.opendns.com/dns-query",
     "google": "https://dns.google/dns-query"
 }
 # Default provider
