@@ -22,7 +22,8 @@ _provider = _available_providers["cloudflare"]
 
 __all__ = (
     'set_resolver_session', 'get_resolver_session',
-    'set_dns_provider', 'get_dns_provider'
+    'set_dns_provider', 'get_dns_provider',
+    'get_all_dns_provider'
 )
 
 def set_resolver_session(session):
