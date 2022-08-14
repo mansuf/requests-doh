@@ -1,11 +1,15 @@
 import requests
+from dns.message import make_query
+from dns.rdatatype import RdataType
+from dns.query import https as query_https
+from dns.rcode import Rcode
 
 from .exceptions import DNSQueryFailed
 
 _resolver_session = None # type: requests.Session
 _available_providers = {
     "cloudflare": "https://cloudflare-dns.com/dns-query",
-    "google": "https://dns.google.com/resolve"
+    "google": "https://dns.google/dns-query"
 }
 # Default provider
 _provider = _available_providers["cloudflare"]
@@ -52,7 +56,16 @@ def get_dns_provider():
     """Get a DoH provider"""
     return _provider
 
-def resolve_dns(url):
+def _resolve(session, doh_endpoint, host, rdatatype):
+    req_message = make_query(host, rdatatype)
+    res_message = query_https(req_message, doh_endpoint, session=session)
+    rcode = Rcode(res_message.rcode())
+    if rcode != Rcode.NOERROR:
+        raise DNSQueryFailed(f"Failed to query DNS {rdatatype.name} from host '{host}' (rcode = {rcode.name}")
+
+    return tuple(str(i) for i in res_message.resolve_chaining().answer)
+
+def resolve_dns(host):
     session = get_resolver_session()
 
     if session is None:
@@ -61,42 +74,18 @@ def resolve_dns(url):
 
     answers = set()
 
-    # Query A type
-    params = {
-        "name": url,
-        "type": 'A'
-    }
-    r = session.get(
+    # Reuse is good
+    query = lambda rdatatype: _resolve(
+        session,
         _provider,
-        params=params,
-        headers={"Accept": "application/dns-json"}
+        host,
+        rdatatype
     )
-    data = r.json()
 
-    if data['Status'] != 0:
-        raise DNSQueryFailed(f"Failed to query DNS A from host '{url}'")
-
-    answers.update(i['data'] for i in data['Answer'])
+    # Query A type
+    answers.update(query(RdataType.A))
 
     # Query AAAA type
-    params = {
-        "name": url,
-        "type": 'AAAA'
-    }
-    r = session.get(
-        _provider,
-        params=params,
-        headers={"Accept": "application/dns-json"}
-    )
-    data = r.json()
-
-    if data['Status'] != 0:
-        raise DNSQueryFailed(f"Failed to query DNS AAAA from host '{url}'")
-
-    try:
-        answers.update(i['data'] for i in data['Answer'])
-    except KeyError:
-        # There is no AAAA type answers
-        pass
+    answers.update(query(RdataType.AAAA))
 
     return answers, _provider

@@ -1,6 +1,6 @@
 # requests-doh
 
-DNS over HTTPS resolver for python requests
+DNS over HTTPS resolver for python requests using [dnspython](https://github.com/rthalley/dnspython) module
 
 ## Installation
 
