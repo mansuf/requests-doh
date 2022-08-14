@@ -56,6 +56,10 @@ def get_dns_provider():
     """Get a DoH provider"""
     return _provider
 
+def get_all_dns_provider():
+    """Return all available DoH providers"""
+    return tuple(_available_providers.keys())
+
 def _resolve(session, doh_endpoint, host, rdatatype):
     req_message = make_query(host, rdatatype)
     res_message = query_https(req_message, doh_endpoint, session=session)
