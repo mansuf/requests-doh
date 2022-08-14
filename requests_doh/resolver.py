@@ -9,6 +9,8 @@ from .exceptions import DNSQueryFailed
 _resolver_session = None # type: requests.Session
 _available_providers = {
     "cloudflare": "https://cloudflare-dns.com/dns-query",
+    "cloudflare-security": "https://security.cloudflare-dns.com/dns-query",
+    "cloudflare-family": "https://family.cloudflare-dns.com/dns-query",
     "google": "https://dns.google/dns-query"
 }
 # Default provider
