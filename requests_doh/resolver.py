@@ -13,6 +13,8 @@ _available_providers = {
     "cloudflare-family": "https://family.cloudflare-dns.com/dns-query",
     "opendns": "https://doh.opendns.com/dns-query",
     "opendns-family": "https://doh.familyshield.opendns.com/dns-query",
+    "adguard": "https://dns.adguard.com/dns-query",
+    "adguard-family": "https://dns-family.adguard.com/dns-query",
     "google": "https://dns.google/dns-query"
 }
 # Default provider
