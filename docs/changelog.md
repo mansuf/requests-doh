@@ -12,6 +12,7 @@
     - opendns-family
     - adguard
     - adguard-family
+    - adguard-unfiltered
     - quad9
 
 ### Breaking changes

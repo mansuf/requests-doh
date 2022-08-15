@@ -15,6 +15,7 @@ _available_providers = {
     "opendns-family": "https://doh.familyshield.opendns.com/dns-query",
     "adguard": "https://dns.adguard.com/dns-query",
     "adguard-family": "https://dns-family.adguard.com/dns-query",
+    "adguard-unfiltered": "https://unfiltered.adguard-dns.com/dns-query",
     "quad9": "https://dns.quad9.net/dns-query",
     "google": "https://dns.google/dns-query"
 }
