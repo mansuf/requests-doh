@@ -98,7 +98,11 @@ def _resolve(session, doh_endpoint, host, rdatatype):
     if rcode != Rcode.NOERROR:
         raise DNSQueryFailed(f"Failed to query DNS {rdatatype.name} from host '{host}' (rcode = {rcode.name}")
 
-    return tuple(str(i) for i in res_message.resolve_chaining().answer)
+    answers = res_message.resolve_chaining().answer
+    if answers is None:
+        return None
+
+    return tuple(str(i) for i in answers)
 
 def resolve_dns(host):
     session = get_resolver_session()
@@ -118,9 +122,13 @@ def resolve_dns(host):
     )
 
     # Query A type
-    answers.update(query(RdataType.A))
+    A_ANSWERS = query(RdataType.A)
+    if A_ANSWERS is not None:
+        answers.update(A_ANSWERS)
 
     # Query AAAA type
-    answers.update(query(RdataType.AAAA))
+    AAAA_ANSWERS = query(RdataType.AAAA)
+    if AAAA_ANSWERS is not None:
+        answers.update(AAAA_ANSWERS)
 
     return answers, _provider

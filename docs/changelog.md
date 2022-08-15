@@ -1,6 +1,16 @@
 # Changelog
 
+## v0.2.1 (UNRELEASED)
+
+### Fix bugs
+
+- Fixed unhandled exception if host doesn't contain AAAA type
+
 ## v0.2.0
+
+```{warning}
+Broken, do not use this version. Instead use `v0.2.1`
+```
 
 ### New features
 

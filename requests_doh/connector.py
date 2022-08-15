@@ -90,6 +90,9 @@ def create_connection(
 
         answers, provider_doh = resolve_dns(host)
 
+        if not answers:
+            raise DNSQueryFailed(f"DNS server {provider_doh} returned empty results from host '{host}'")
+
         # Some answers contain raw domain (example.com) not an ip address
         # socket.connect() didn't want that
         fix_resolved_dns(answers, port, family, socket.SOCK_STREAM)
