@@ -8,7 +8,7 @@ DNS over HTTPS resolver for python [requests](https://github.com/psf/requests) u
 
 ## Key features
 
-- Resolve hosts using [public DNS servers](https://adguard-dns.io/kb/general/dns-providers)
+- Resolve hosts using [public DNS servers](https://adguard-dns.io/kb/general/dns-providers) over HTTPS
 - DNS local cache, making faster to resolve hosts
 - Easy to use
 
