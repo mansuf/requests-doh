@@ -10,6 +10,14 @@ DNS over HTTPS resolver for python requests using [dnspython](https://github.com
 installation
 ```
 
+## API usage
+
+```{toctree}
+:maxdepth: 2
+
+api_usage
+```
+
 ## API reference
 
 ```{toctree}
