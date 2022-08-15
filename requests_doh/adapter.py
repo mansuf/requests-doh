@@ -20,7 +20,7 @@ class DNSOverHTTPSAdapter(HTTPAdapter):
     cache_expire_time: :class:`float`
         Set DNS cache expire time
     **kwargs
-        These parameters will be passed to :meth:`requests.adapters.HTTPAdapter.__init__()`
+        These parameters will be passed to :class:`requests.adapters.HTTPAdapter`
     """
     def __init__(self, provider=None, cache_expire_time=None, **kwargs):
         if provider:
