@@ -14,6 +14,7 @@
     - adguard-family
     - adguard-unfiltered
     - quad9
+    - quad9-unsecured
 
 ### Breaking changes
 

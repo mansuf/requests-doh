@@ -17,6 +17,7 @@ _available_providers = {
     "adguard-family": "https://dns-family.adguard.com/dns-query",
     "adguard-unfiltered": "https://unfiltered.adguard-dns.com/dns-query",
     "quad9": "https://dns.quad9.net/dns-query",
+    "quad9-unsecured": "https://dns10.quad9.net/dns-query",
     "google": "https://dns.google/dns-query"
 }
 # Default provider
