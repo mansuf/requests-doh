@@ -3,6 +3,11 @@
 API Reference
 --------------
 
+Session
+========
+
+.. autoclass:: DNSOverHTTPSSession
+
 Adapters
 ==========
 

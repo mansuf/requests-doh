@@ -9,6 +9,7 @@ __author_email__ = "danipart4@gmail.com"
 __license__ = "MIT"
 __repository__ = "mansuf/requests-doh"
 
+from .session import *
 from .adapter import *
 from .resolver import *
 from .connector import *

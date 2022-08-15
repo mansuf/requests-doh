@@ -15,6 +15,7 @@
     - adguard-unfiltered
     - quad9
     - quad9-unsecured
+- Added `DNSOverHTTPSSession` for ready-to-use DoH requests session
 
 ### Breaking changes
 
