@@ -2,7 +2,7 @@
 DNS over HTTPS resolver for python requests
 """
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 __description__ = "DNS over HTTPS resolver for python requests"
 __author__ = "Rahman Yusuf"
 __author_email__ = "danipart4@gmail.com"

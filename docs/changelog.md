@@ -1,6 +1,6 @@
 # Changelog
 
-## UNRELEASED
+## v0.2.0
 
 ### New features
 
@@ -19,7 +19,7 @@
 
 ### Breaking changes
 
-- Starting from UNRELEASED, requests-doh rely on [dnspython](https://github.com/rthalley/dnspython) module 
+- Starting from v0.2.0, requests-doh rely on [dnspython](https://github.com/rthalley/dnspython) module 
 for extending it's library usage and query to many public and private DNS.
 
 ## v0.1.1
