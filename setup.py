@@ -85,6 +85,7 @@ setup(
         'dns-over-https'
     ], 
     install_requires=requires_main,
+    extras_require=extras_require,
     classifiers=[
         'Development Status :: 5 - Production/Stable',  
         'Intended Audience :: Developers',
