@@ -1,3 +1,7 @@
 __pycache__
 test.py
 *.egg-info
+# Vscode workspace
+*.code-workspace
+# Docs
+docs/_build

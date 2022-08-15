@@ -48,11 +48,22 @@ def set_resolver_session(session):
     _resolver_session = session
 
 def get_resolver_session() -> requests.Session:
-    """Return an http session for DoH resolver"""
+    """
+    Return
+    -------
+    requests.Session
+        Return an http session for DoH resolver
+    """
     return _resolver_session
 
 def set_dns_provider(provider):
-    """Set a DoH provider, must be 'google' or 'cloudflare'"""
+    """Set a DoH provider, must be a valid DoH providers
+    
+    Parameters
+    -----------
+    provider: :class:`str`
+        An valid DoH provider, see :doc:`doh_providers`
+    """
     global _provider
 
     if provider not in _available_providers.keys():
@@ -61,11 +72,21 @@ def set_dns_provider(provider):
     _provider = _available_providers[provider]
 
 def get_dns_provider():
-    """Get a DoH provider"""
+    """
+    Return
+    -------
+    str
+        Return current DoH provider
+    """
     return _provider
 
 def get_all_dns_provider():
-    """Return all available DoH providers"""
+    """
+    Return
+    -------
+    tuple[str]
+        Return all available DoH providers
+    """
     return tuple(_available_providers.keys())
 
 def _resolve(session, doh_endpoint, host, rdatatype):
