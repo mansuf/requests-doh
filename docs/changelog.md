@@ -1,5 +1,11 @@
 # Changelog
 
+## UNRELEASED
+
+### Improvements
+
+- Improved DoH resolving
+
 ## v0.2.1
 
 ### Fix bugs

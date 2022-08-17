@@ -81,13 +81,6 @@ def create_connection(
     cached = _cache.get_cache(host)
     if not cached:
         # Uncached DNS
-        orig_answers = socket.getaddrinfo(host, port, family, socket.SOCK_STREAM)
-
-        try:
-            af, socktype, proto, canonname, sa = orig_answers[0]
-        except IndexError:
-            raise socket.error("getaddrinfo returns an empty list")
-
         answers, provider_doh = resolve_dns(host)
 
         if not answers:
@@ -97,9 +90,9 @@ def create_connection(
         # socket.connect() didn't want that
         fix_resolved_dns(answers, port, family, socket.SOCK_STREAM)
 
-        _cache.set_cache(host, af, socktype, proto, canonname, sa, answers, provider_doh)
+        _cache.set_cache(host, answers, provider_doh)
     else:
-        af, socktype, proto, canonname, sa, answers, provider_doh = cached
+        answers, provider_doh = cached
 
     for answer in answers:
         try:
@@ -107,27 +100,28 @@ def create_connection(
         except ValueError:
             # Most likely this is domain returned from DoH provider
             continue
+        
+        for res in socket.getaddrinfo(str(ip), port, family, socket.SOCK_STREAM):
+            af, socktype, proto, canonname, sa = res
+            sock = None
+            try:
+                sock = socket.socket(af, socktype, proto)
 
-        sa = (str(ip), sa[1])
-        sock = None
-        try:
-            sock = socket.socket(af, socktype, proto)
+                # If provided, set socket level options before connecting.
+                _set_socket_options(sock, socket_options)
 
-            # If provided, set socket level options before connecting.
-            _set_socket_options(sock, socket_options)
+                if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+                    sock.settimeout(timeout)
+                if source_address:
+                    sock.bind(source_address)
+                sock.connect(sa)
+                return sock
 
-            if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
-                sock.settimeout(timeout)
-            if source_address:
-                sock.bind(source_address)
-            sock.connect(sa)
-            return sock
-
-        except socket.error as e:
-            err = e
-            if sock is not None:
-                sock.close()
-                sock = None
+            except socket.error as e:
+                err = e
+                if sock is not None:
+                    sock.close()
+                    sock = None
 
     if err is not None:
         raise err
