@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.3
+
+### Fix bugs
+
+- Fixed missing dependecies resulting error `dns.query.NoDOH: Neither httpx nor requests is available.`
+
 ## v0.2.2
 
 ### Improvements
