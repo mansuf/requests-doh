@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.4
+
+### Dependecies
+
+- Updated requests from v2.28.1 to v2.28.2
+- Updated dnspython from v2.2.1 to v2.3.0
+
 ## v0.2.3
 
 ### Fix bugs
