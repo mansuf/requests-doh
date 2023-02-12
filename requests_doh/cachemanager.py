@@ -11,10 +11,10 @@ class DNSCacheManager:
         else:
             raise ValueError(f'{time.__class__.__name__} is not float type')
     
-    def set_cache(self, host, answers, provider):
+    def set_cache(self, host, answers):
         self._data[host] = {
             "expire": datetime.now() + self._expire,
-            "data": [answers, provider]
+            "data": answers
         }
     
     def get_cache(self, host):
