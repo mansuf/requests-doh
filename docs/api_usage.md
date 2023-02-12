@@ -9,7 +9,7 @@ from requests_doh import DNSOverHTTPSSession
 # By default, DoH provider will set to `cloudflare`
 session = DNSOverHTTPSSession(provider='google')
 r = session.get('https://google.com')
-print(r.content)
+print(r.status_code)
 ```
 
 ## Basic usage with adapters
@@ -26,5 +26,18 @@ session.mount('https://', adapter)
 session.mount('http://', adapter)
 
 r = session.get('https://google.com')
-print(r.content)
+print(r.status_code)
+```
+
+## Add custom DoH (DNS over HTTPS) provider
+
+```python
+import requests
+from requests_doh import DNSOverHTTPSSession, add_dns_provider
+
+add_dns_provider("another-dns", "https://another-dns.example.com/dns-query")
+
+session = DNSOverHTTPSSession("another-dns")
+r = session.get("https://google.com/")
+print(r.status_code)
 ```
