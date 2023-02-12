@@ -2,6 +2,10 @@
 
 ## UNRELEASED
 
+### New features
+
+- Added ability to add custom DoH (DNS over HTTPS) provider [#1](https://github.com/mansuf/requests-doh/issues/1)
+
 ### Improvements
 
 - Improved performance for querying DNS over HTTPS
