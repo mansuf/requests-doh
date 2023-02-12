@@ -181,6 +181,7 @@ def remove_dns_provider(name, fallback=None):
         DoH provider that want to remove
     fallback: :class:`str`
         Set a fallback DoH provider
+
     Raises
     -------
     DoHProviderNotExist
