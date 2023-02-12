@@ -26,7 +26,7 @@ _provider = _available_providers["cloudflare"]
 __all__ = (
     'set_resolver_session', 'get_resolver_session',
     'set_dns_provider', 'get_dns_provider',
-    'get_all_dns_provider'
+    'get_all_dns_provider', 'resolve_dns'
 )
 
 def set_resolver_session(session):
@@ -131,4 +131,9 @@ def resolve_dns(host):
     if AAAA_ANSWERS is not None:
         answers.update(AAAA_ANSWERS)
 
-    return answers, _provider
+    if not answers:
+        raise DNSQueryFailed(
+            f"DNS server {_provider} returned empty results from host '{host}'"
+        )
+
+    return answers

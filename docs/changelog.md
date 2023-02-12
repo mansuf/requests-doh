@@ -1,5 +1,11 @@
 # Changelog
 
+## UNRELEASED
+
+### Improvements
+
+- Improved performance for querying DNS over HTTPS
+
 ## v0.2.4
 
 ### Dependecies

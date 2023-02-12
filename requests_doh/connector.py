@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import ipaddress
 
 import socket
+import logging
 from urllib3.connection import HTTPSConnection, HTTPConnection
 from urllib3.util.connection import allowed_gai_family, _set_socket_options
 from urllib3.exceptions import ConnectTimeoutError, NewConnectionError, LocationParseError
@@ -20,11 +21,10 @@ except ImportError:
 
 from .resolver import resolve_dns
 from .cachemanager import DNSCacheManager
-from .exceptions import DNSQueryFailed
-from .utils import fix_resolved_dns
 
 __all__ = ('set_dns_cache_expire_time', 'purge_dns_cache')
 
+log = logging.getLogger(__name__)
 _cache = DNSCacheManager()
 
 def set_dns_cache_expire_time(time):
@@ -81,27 +81,21 @@ def create_connection(
     cached = _cache.get_cache(host)
     if not cached:
         # Uncached DNS
-        answers, provider_doh = resolve_dns(host)
+        answers = resolve_dns(host)
 
-        if not answers:
-            raise DNSQueryFailed(f"DNS server {provider_doh} returned empty results from host '{host}'")
-
-        # Some answers contain raw domain (example.com) not an ip address
-        # socket.connect() didn't want that
-        fix_resolved_dns(answers, port, family, socket.SOCK_STREAM)
-
-        _cache.set_cache(host, answers, provider_doh)
+        _cache.set_cache(host, answers)
     else:
-        answers, provider_doh = cached
+        answers = cached
 
     for answer in answers:
         try:
             ip = ipaddress.ip_address(answer)
         except ValueError:
             # Most likely this is domain returned from DoH provider
+            log.warning(f"Domain detected ({answer}) in DoH query result to {host}")
             continue
         
-        for res in socket.getaddrinfo(str(ip), port, family, socket.SOCK_STREAM):
+        for res in socket.getaddrinfo(answer, port, family, socket.SOCK_STREAM):
             af, socktype, proto, canonname, sa = res
             sock = None
             try:
@@ -126,12 +120,7 @@ def create_connection(
     if err is not None:
         raise err
 
-    # The answers is returned but the data they returned is invalid
-    # socket object needs to connect to a valid ipv4 or ipv6 address
-    # not a raw domain
-    raise DNSQueryFailed(f"DoH provider '{provider_doh}' send an invalid response = {answers}")
-
-class ModifiedHTTPConnection(HTTPConnection):
+class RequestsDoHHTTPConnection(HTTPConnection):
     # This code is copied from urllib3/connection.py version 1.26.8 (from requests v2.28.1)
     def _new_conn(self):
         """Establish a socket connection and set nodelay settings on it.
@@ -164,5 +153,5 @@ class ModifiedHTTPConnection(HTTPConnection):
 
         return conn
 
-class ModifiedHTTPSConnection(ModifiedHTTPConnection, HTTPSConnection):
+class RequestsDoHHTTPSConnection(RequestsDoHHTTPConnection, HTTPSConnection):
     pass

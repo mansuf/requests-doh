@@ -2,8 +2,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.connectionpool import HTTPSConnectionPool, HTTPConnectionPool
 
 from .connector import (
-    ModifiedHTTPConnection,
-    ModifiedHTTPSConnection,
+    RequestsDoHHTTPConnection,
+    RequestsDoHHTTPSConnection,
     set_dns_cache_expire_time
 )
 from .resolver import set_dns_provider
@@ -34,8 +34,8 @@ class DNSOverHTTPSAdapter(HTTPAdapter):
     def get_connection(self, url, proxies=None):
         conn = super().get_connection(url, proxies)
         if isinstance(conn, HTTPSConnectionPool):
-            conn.ConnectionCls = ModifiedHTTPSConnection
+            conn.ConnectionCls = RequestsDoHHTTPSConnection
         else:
             # HTTP type
-            conn.ConnectionCls = ModifiedHTTPConnection
+            conn.ConnectionCls = RequestsDoHHTTPConnection
         return conn
