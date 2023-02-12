@@ -29,15 +29,24 @@ r = session.get('https://google.com')
 print(r.status_code)
 ```
 
-## Add custom DoH (DNS over HTTPS) provider
+## Add or remove custom DoH (DNS over HTTPS) provider
 
 ```python
 import requests
-from requests_doh import DNSOverHTTPSSession, add_dns_provider
+from requests_doh import DNSOverHTTPSSession, add_dns_provider, remove_dns_provider
 
+# Adding a new DoH provider
 add_dns_provider("another-dns", "https://another-dns.example.com/dns-query")
 
 session = DNSOverHTTPSSession("another-dns")
 r = session.get("https://google.com/")
 print(r.status_code)
+```
+
+```python
+import requests
+from requests_doh import DNSOverHTTPSSession, add_dns_provider, remove_dns_provider
+
+# Remove DoH provider
+remove_dns_provider("another-dns")
 ```
