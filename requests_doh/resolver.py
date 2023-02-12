@@ -26,7 +26,8 @@ _provider = _available_providers["cloudflare"]
 __all__ = (
     'set_resolver_session', 'get_resolver_session',
     'set_dns_provider', 'get_dns_provider',
-    'get_all_dns_provider', 'resolve_dns'
+    'add_dns_provider', 'get_all_dns_provider', 
+    'resolve_dns'
 )
 
 def set_resolver_session(session):
@@ -81,6 +82,24 @@ def get_dns_provider():
         Return current DoH provider
     """
     return _provider
+
+def add_dns_provider(name, address, switch=False):
+    """Add a DoH provider
+    
+    Parameters
+    -----------
+    name: :class:`str`
+        Name for DoH provider
+    address: :class:`str`
+        Full URL / endpoint for DoH provider
+    switch: Optional[:class:`bool`]
+        If ``True``, the DoH provider will automatically switch to 
+        newly created DoH provider
+    """
+    _available_providers[name] = address
+
+    if switch:
+        set_dns_provider(name)
 
 def get_all_dns_provider():
     """
