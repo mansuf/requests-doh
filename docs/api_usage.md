@@ -48,5 +48,5 @@ import requests
 from requests_doh import DNSOverHTTPSSession, add_dns_provider, remove_dns_provider
 
 # Remove DoH provider
-remove_dns_provider("another-dns")
+remove_dns_provider("another-dns", fallback="cloudflare")
 ```
