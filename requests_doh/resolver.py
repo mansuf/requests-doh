@@ -4,7 +4,7 @@ from dns.rdatatype import RdataType
 from dns.query import https as query_https
 from dns.rcode import Rcode
 
-from .exceptions import DNSQueryFailed
+from .exceptions import DNSQueryFailed, DoHProviderNotExist
 
 _resolver_session = None # type: requests.Session
 _available_providers = {
@@ -26,8 +26,8 @@ _provider = _available_providers["cloudflare"]
 __all__ = (
     'set_resolver_session', 'get_resolver_session',
     'set_dns_provider', 'get_dns_provider',
-    'add_dns_provider', 'get_all_dns_provider', 
-    'resolve_dns'
+    'add_dns_provider', 'remove_dns_provider', 
+    'get_all_dns_provider', 'resolve_dns'
 )
 
 def set_resolver_session(session):
@@ -100,6 +100,35 @@ def add_dns_provider(name, address, switch=False):
 
     if switch:
         set_dns_provider(name)
+
+def remove_dns_provider(name):
+    """Remove a DoH provider
+    
+    If the given provider is an active DoH provider, 
+    :func:`get_dns_provider` will return ``None``. 
+    You must call :func:`set_dns_provider` from one of available DoH providers
+    in order to get DoH working
+
+    Parameters
+    -----------
+    name: :class:`str`
+        DoH provider that want to remove
+    
+    Raises
+    -------
+    DoHProviderNotExist
+        DoH provider is not exist in list of available DoH providers
+    """
+    global _provider
+
+    try:
+        _available_providers.pop(name)
+    except KeyError:
+        raise DoHProviderNotExist(
+            "DoH provider is not exist in list of available DoH providers"
+        )
+
+    _provider = None
 
 def get_all_dns_provider():
     """

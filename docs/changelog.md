@@ -4,7 +4,8 @@
 
 ### New features
 
-- Added ability to add custom DoH (DNS over HTTPS) provider [#1](https://github.com/mansuf/requests-doh/issues/1)
+- Added ability to add custom DNS over HTTPS provider [#1](https://github.com/mansuf/requests-doh/issues/1)
+- Added ability to remove DNS over HTTPS provider
 
 ### Improvements
 

@@ -13,3 +13,4 @@ from .session import *
 from .adapter import *
 from .resolver import *
 from .connector import *
+from .exceptions import *
