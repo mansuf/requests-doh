@@ -146,7 +146,7 @@ def remove_dns_provider(name, fallback=None):
         # the session is still working
         r = session.get("https://google.com")
 
-    But what will happend if didn't add ``fallback`` parameter or didn't call :func:`set_dns_provider()` ?
+    But what will happend if we didn't add ``fallback`` parameter or didn't call :func:`set_dns_provider()` ?
     Well error will occurred, take a look at this example:
 
     .. code-block:: python3
