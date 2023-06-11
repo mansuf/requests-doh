@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.1
+
+This update fix `requests` dependencies because of [CVE-202-32681](https://github.com/psf/requests/security/advisories/GHSA-j8r2-6x86-q33q)
+
+### Dependencies
+
+- Bump requests from v2.28.2 to v2.31.0
+
 ## v0.3.0
 
 ### New features
