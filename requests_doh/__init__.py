@@ -12,5 +12,5 @@ __repository__ = "mansuf/requests-doh"
 from .session import *
 from .adapter import *
 from .resolver import *
-from .connector import *
 from .exceptions import *
+from .cachemanager import *

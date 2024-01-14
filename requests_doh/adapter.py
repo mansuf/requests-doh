@@ -1,14 +1,25 @@
 from requests.adapters import HTTPAdapter
-from urllib3.connectionpool import HTTPSConnectionPool, HTTPConnectionPool
-
-from .connector import (
-    RequestsDoHHTTPConnection,
-    RequestsDoHHTTPSConnection,
-    set_dns_cache_expire_time
+from urllib3.connectionpool import HTTPSConnectionPool
+from urllib3.contrib.socks import (
+    SOCKSHTTPSConnectionPool, 
+    SOCKSHTTPConnectionPool,
 )
+
+from .connector.default import (
+    DoHHTTPConnection,
+    DoHHTTPSConnection,
+)
+
+from .cachemanager import set_dns_cache_expire_time
+
+from .connector.proxies import (
+    SOCKSConnection,
+    SOCKSHTTPSConnection
+)
+
 from .resolver import set_dns_provider
 
-__all__ = ('DNSOverHTTPSAdapter',)
+__all__ = ('DNSOverHTTPSAdapter',)  
 
 class DNSOverHTTPSAdapter(HTTPAdapter):
     """An DoH (DNS over HTTPS) adapter for :class:`requests.Session`
@@ -33,9 +44,13 @@ class DNSOverHTTPSAdapter(HTTPAdapter):
 
     def get_connection(self, url, proxies=None):
         conn = super().get_connection(url, proxies)
-        if isinstance(conn, HTTPSConnectionPool):
-            conn.ConnectionCls = RequestsDoHHTTPSConnection
+        if isinstance(conn, SOCKSHTTPSConnectionPool):
+            conn.ConnectionCls = SOCKSHTTPSConnection
+        elif isinstance(conn, SOCKSHTTPConnectionPool):
+            conn.ConnectionCls = SOCKSConnection
+        elif isinstance(conn, HTTPSConnectionPool):
+            conn.ConnectionCls = DoHHTTPSConnection
         else:
             # HTTP type
-            conn.ConnectionCls = RequestsDoHHTTPConnection
+            conn.ConnectionCls = DoHHTTPConnection
         return conn

@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+__all__ = ('set_dns_cache_expire_time', 'purge_dns_cache', 'cachemanager')
+
 class DNSCacheManager:
     def __init__(self):
         self._expire = timedelta(seconds=300)
@@ -40,3 +42,28 @@ class DNSCacheManager:
 
     def purge_all(self):
         self._data.clear()
+
+cachemanager = DNSCacheManager()
+
+def set_dns_cache_expire_time(time):
+    """Set DNS cache expired time in seconds
+    
+    Parameters
+    -----------
+    time: :class:`float`
+        An expire time
+    """
+    cachemanager.set_expire_time(time)
+
+def purge_dns_cache(host=None):
+    """Purge DNS cache
+
+    Parameters
+    -----------
+    host: :class:`str`
+        Cached DNS host want to be purged, if ``host`` is None, all DNS caches will be purged.
+    """
+    if host:
+        cachemanager.purge(host)
+    else:
+        cachemanager.purge_all()
