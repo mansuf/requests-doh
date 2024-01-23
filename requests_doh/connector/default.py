@@ -19,36 +19,10 @@ except ImportError:
         finally:
             value = None
 
-from .resolver import resolve_dns
-from .cachemanager import DNSCacheManager
-
-__all__ = ('set_dns_cache_expire_time', 'purge_dns_cache')
+from ..resolver import resolve_dns
+from ..cachemanager import cachemanager
 
 log = logging.getLogger(__name__)
-_cache = DNSCacheManager()
-
-def set_dns_cache_expire_time(time):
-    """Set DNS cache expired time in seconds
-    
-    Parameters
-    -----------
-    time: :class:`float`
-        An expire time
-    """
-    _cache.set_expire_time(time)
-
-def purge_dns_cache(host=None):
-    """Purge DNS cache
-
-    Parameters
-    -----------
-    host: :class:`str`
-        Cached DNS host want to be purged, if ``host`` is None, all DNS caches will be purged.
-    """
-    if host:
-        _cache.purge(host)
-    else:
-        _cache.purge_all()
 
 # This code is copied from urllib3/util/connection.py version 1.26.8 (from requests v2.28.1)
 def create_connection(
@@ -56,6 +30,7 @@ def create_connection(
     timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
     source_address=None,
     socket_options=None,
+    proxy=None
 ):
     """Same as :meth:`urllib3.util.connection.create_connection()`, 
     except it has DNS over HTTPS resovler inside of it.
@@ -78,18 +53,31 @@ def create_connection(
             LocationParseError(u"'%s', label empty or too long" % host), None
         )
 
-    cached = _cache.get_cache(host)
-    if not cached:
-        # Uncached DNS
-        answers = resolve_dns(host)
+    if not proxy:
+        cached = cachemanager.get_cache(host)
+        if not cached:
+            # Uncached DNS
+            answers = resolve_dns(host)
 
-        _cache.set_cache(host, answers)
-    else:
-        answers = cached
+            cachemanager.set_cache(host, answers)
+        else:
+            answers = cached
+    
+    if proxy:
+        # We must make sure that this isn't a DNS name
+        try:
+            socket.inet_aton(host)
+        except OSError:
+            # This is a DNS name
+            # To be honest, this is messed up
+            answers = [i[4][0] for i in socket.getaddrinfo(host, port)]
+        else:
+            # It's an ip address
+            answers = [host]
 
     for answer in answers:
         try:
-            ip = ipaddress.ip_address(answer)
+            ipaddress.ip_address(answer)
         except ValueError:
             # Most likely this is domain returned from DoH provider
             log.warning(f"Domain detected ({answer}) in DoH query result to {host}")
@@ -120,7 +108,7 @@ def create_connection(
     if err is not None:
         raise err
 
-class RequestsDoHHTTPConnection(HTTPConnection):
+class DoHHTTPConnection(HTTPConnection):
     # This code is copied from urllib3/connection.py version 1.26.8 (from requests v2.28.1)
     def _new_conn(self):
         """Establish a socket connection and set nodelay settings on it.
@@ -133,6 +121,8 @@ class RequestsDoHHTTPConnection(HTTPConnection):
 
         if self.socket_options:
             extra_kw["socket_options"] = self.socket_options
+
+        extra_kw["proxy"] = self.proxy
 
         try:
             conn = create_connection(
@@ -153,5 +143,5 @@ class RequestsDoHHTTPConnection(HTTPConnection):
 
         return conn
 
-class RequestsDoHHTTPSConnection(RequestsDoHHTTPConnection, HTTPSConnection):
+class DoHHTTPSConnection(DoHHTTPConnection, HTTPSConnection):
     pass

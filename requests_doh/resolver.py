@@ -236,12 +236,8 @@ def resolve_dns(host):
     answers = set()
 
     # Reuse is good
-    query = lambda rdatatype: _resolve(
-        session,
-        _provider,
-        host,
-        rdatatype
-    )
+    def query(rdatatype):
+        return _resolve(session, _provider, host, rdatatype)
 
     # Query A type
     A_ANSWERS = query(RdataType.A)
@@ -258,4 +254,4 @@ def resolve_dns(host):
             f"DNS server {_provider} returned empty results from host '{host}'"
         )
 
-    return answers
+    return list(answers)
