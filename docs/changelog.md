@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.3.3
+
+### Fix bugs
+
+- Fixed missing dependencies (`ModuleNotFoundError: No module named socks`)
+
+## v0.3.2
+
+### Fix bugs
+
+- Fixed requests with socks proxy is not working #3
+
+### Note: Potential breaking changes
+
+Functions `set_dns_cache_expire_time()` and `purge_dns_cache()` imported from module `requests_doh.connector` are no longer exists. Instead you can import it from `requests_doh.cachemanager`
+
+If you usually import those functions from `requests_doh` (root library), these changes doesn't affect you at all.
+
+For example:
+
+```python
+# If you do this starting from v0.3.2, you will get `ImportError`
+from requests_doh.connector import set_dns_cache_expire_time, purge_dns_cache
+
+# Do this instead
+from requests_doh.cachemanager import set_dns_cache_expire_time, purge_dns_cache
+
+# Those changes doesn't affect you if you use this import method
+from requests_doh import set_dns_cache_expire_time, purge_dns_cache
+```
+
 ## v0.3.1
 
 This update fix `requests` dependencies because of [CVE-202-32681](https://github.com/psf/requests/security/advisories/GHSA-j8r2-6x86-q33q)
