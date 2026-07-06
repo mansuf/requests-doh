@@ -9,7 +9,10 @@ from base64 import b64encode
 import typing
 import socket
 import struct
-from urllib3.contrib.socks import socks, _TYPE_SOCKS_OPTIONS, SocketTimeout
+try:
+    from urllib3.contrib.socks import socks, _TYPE_SOCKS_OPTIONS, SocketTimeout
+except ImportError:
+    from urllib3.contrib._socks_legacy import socks, _TYPE_SOCKS_OPTIONS, SocketTimeout
 from urllib3.exceptions import ConnectTimeoutError, NewConnectionError
 from urllib3.connection import HTTPConnection, HTTPSConnection
 

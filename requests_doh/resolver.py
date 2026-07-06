@@ -5,24 +5,24 @@ from dns.query import https as query_https
 from dns.rcode import Rcode
 
 from .exceptions import (
-    DNSQueryFailed, 
+    DNSQueryFailed,
     DoHProviderNotExist,
     NoDoHProvider
 )
 
 _resolver_session = None # type: httpx.Client
 _available_providers = {
-    "cloudflare": "https://cloudflare-dns.com/dns-query",
-    "cloudflare-security": "https://security.cloudflare-dns.com/dns-query",
-    "cloudflare-family": "https://family.cloudflare-dns.com/dns-query",
-    "opendns": "https://doh.opendns.com/dns-query",
-    "opendns-family": "https://doh.familyshield.opendns.com/dns-query",
-    "adguard": "https://dns.adguard.com/dns-query",
-    "adguard-family": "https://dns-family.adguard.com/dns-query",
-    "adguard-unfiltered": "https://unfiltered.adguard-dns.com/dns-query",
-    "quad9": "https://dns.quad9.net/dns-query",
-    "quad9-unsecured": "https://dns10.quad9.net/dns-query",
-    "google": "https://dns.google/dns-query"
+    "cloudflare": {"url": "https://cloudflare-dns.com/dns-query", "bootstrap_address": None, "verify": True},
+    "cloudflare-security": {"url": "https://security.cloudflare-dns.com/dns-query", "bootstrap_address": None, "verify": True},
+    "cloudflare-family": {"url": "https://family.cloudflare-dns.com/dns-query", "bootstrap_address": None, "verify": True},
+    "opendns": {"url": "https://doh.opendns.com/dns-query", "bootstrap_address": None, "verify": True},
+    "opendns-family": {"url": "https://doh.familyshield.opendns.com/dns-query", "bootstrap_address": None, "verify": True},
+    "adguard": {"url": "https://dns.adguard.com/dns-query", "bootstrap_address": None, "verify": True},
+    "adguard-family": {"url": "https://dns-family.adguard.com/dns-query", "bootstrap_address": None, "verify": True},
+    "adguard-unfiltered": {"url": "https://unfiltered.adguard-dns.com/dns-query", "bootstrap_address": None, "verify": True},
+    "quad9": {"url": "https://dns.quad9.net/dns-query", "bootstrap_address": None, "verify": True},
+    "quad9-unsecured": {"url": "https://dns10.quad9.net/dns-query", "bootstrap_address": None, "verify": True},
+    "google": {"url": "https://dns.google/dns-query", "bootstrap_address": None, "verify": True}
 }
 # Default provider
 _provider = _available_providers["cloudflare"]
@@ -30,7 +30,7 @@ _provider = _available_providers["cloudflare"]
 __all__ = (
     'set_resolver_session', 'get_resolver_session',
     'set_dns_provider', 'get_dns_provider',
-    'add_dns_provider', 'remove_dns_provider', 
+    'add_dns_provider', 'remove_dns_provider',
     'get_all_dns_provider', 'resolve_dns'
 )
 
@@ -90,11 +90,37 @@ def get_dns_provider():
     str
         Return current DoH provider
     """
-    return _provider
+    if _provider is None:
+        return None
 
-def add_dns_provider(name, address, switch=False):
+    return _provider["url"]
+
+def add_dns_provider(name, address, switch=False, bootstrap_address=None, verify=True):
     """Add a DoH provider
-    
+
+    Passing ``bootstrap_address`` makes it possible to skip DNS resolution
+    entirely, including resolving the IP address of the DoH provider itself.
+    The connection is made straight to that IP, while TLS SNI and certificate
+    verification still use the hostname from ``address``.
+
+    For example:
+
+    .. code-block:: python3
+
+        from requests_doh import DNSOverHTTPSSession, add_dns_provider
+
+        # Connect to Cloudflare by IP, verifying the certificate against
+        # ``cloudflare-dns.com``
+        add_dns_provider(
+            "cloudflare-by-ip",
+            "https://cloudflare-dns.com/dns-query",
+            bootstrap_address="104.16.249.249"
+        )
+
+        session = DNSOverHTTPSSession("cloudflare-by-ip")
+        r = session.get("https://example.com")
+        print(r.status_code)
+
     Parameters
     -----------
     name: :class:`str`
@@ -102,10 +128,21 @@ def add_dns_provider(name, address, switch=False):
     address: :class:`str`
         Full URL / endpoint for DoH provider
     switch: Optional[:class:`bool`]
-        If ``True``, the DoH provider will automatically switch to 
+        If ``True``, the DoH provider will automatically switch to
         newly created DoH provider
+    bootstrap_address: Optional[:class:`str`]
+        IP address used to connect to the DoH provider directly, bypassing
+        DNS resolution of the provider hostname
+    verify: Optional[Union[:class:`bool`, :class:`str`]]
+        TLS certificate verification. ``True`` (the default) verifies against
+        the default CA bundle, ``False`` disables verification, and a ``str``
+        specifies a path to a CA certificate file or directory.
     """
-    _available_providers[name] = address
+    _available_providers[name] = {
+        "url": address,
+        "bootstrap_address": bootstrap_address,
+        "verify": verify
+    }
 
     if switch:
         set_dns_provider(name)
@@ -210,9 +247,15 @@ def get_all_dns_provider():
     """
     return tuple(_available_providers.keys())
 
-def _resolve(session, doh_endpoint, host, rdatatype):
+def _resolve(session, doh_endpoint, host, rdatatype, bootstrap_address=None, verify=True):
     req_message = make_query(host, rdatatype)
-    res_message = query_https(req_message, doh_endpoint, session=session)
+    res_message = query_https(
+        req_message,
+        doh_endpoint,
+        session=session,
+        bootstrap_address=bootstrap_address,
+        verify=verify,
+    )
     rcode = Rcode(res_message.rcode())
     if rcode != Rcode.NOERROR:
         raise DNSQueryFailed(f"Failed to query DNS {rdatatype.name} from host '{host}' (rcode = {rcode.name}")
@@ -227,17 +270,29 @@ def resolve_dns(host):
     if _provider is None:
         raise NoDoHProvider("There is no active DoH provider")
 
-    session = get_resolver_session()
+    if _provider["bootstrap_address"] is not None or _provider["verify"] is not True:
+        # dnspython ignores ``bootstrap_address`` and ``verify`` when an existing
+        # session is passed in, so let it build its own client with those applied.
+        session = None
+    else:
+        session = get_resolver_session()
 
-    if session is None:
-        session = httpx.Client()
-        set_resolver_session(session)
+        if session is None:
+            session = httpx.Client()
+            set_resolver_session(session)
 
     answers = set()
 
     # Reuse is good
     def query(rdatatype):
-        return _resolve(session, _provider, host, rdatatype)
+        return _resolve(
+            session,
+            _provider["url"],
+            host,
+            rdatatype,
+            bootstrap_address=_provider["bootstrap_address"],
+            verify=_provider["verify"],
+        )
 
     # Query A type
     A_ANSWERS = query(RdataType.A)
@@ -251,7 +306,7 @@ def resolve_dns(host):
 
     if not answers:
         raise DNSQueryFailed(
-            f"DNS server {_provider} returned empty results from host '{host}'"
+            f"DNS server {_provider['url']} returned empty results from host '{host}'"
         )
 
     return list(answers)
